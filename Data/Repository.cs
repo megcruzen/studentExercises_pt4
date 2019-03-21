@@ -13,7 +13,7 @@ namespace StudentExercises.Data
         {
             get
             {
-                // This is "address" of the database
+                /// This is "address" of the database
                 string _connectionString = "Server=DESKTOP-LTM1VSL\\SQLEXPRESS;Database=StudentExercises;Trusted_Connection=True;";
                 return new SqlConnection(_connectionString);
             }
@@ -23,27 +23,27 @@ namespace StudentExercises.Data
          * Exercises
          ************************************************************************************/
 
-        /// Return a list of all exercises in the database
+        // Return a list of all exercises in the database
         public List<Exercise> GetAllExercises()
         {
             using (SqlConnection conn = Connection)
             {
-                // Open() the connection
+                /// Open() the connection
                 conn.Open();
 
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
 
-                    // Here we setup the command with the SQL we want to execute before we execute it.
+                    /// Here we setup the command with the SQL we want to execute before we execute it.
                     cmd.CommandText = "SELECT Id, ExerciseName, ExerciseLanguage FROM Exercise";
 
-                    // Execute the SQL in the database and get a "reader" that will give us access to the data.
+                    /// Execute the SQL in the database and get a "reader" that will give us access to the data.
                     SqlDataReader reader = cmd.ExecuteReader();
 
-                    // A list to hold the departments we retrieve from the database.
+                    /// A list to hold the departments we retrieve from the database.
                     List<Exercise> exercises = new List<Exercise>();
 
-                    // Read() will return true if there's more data to read
+                    /// Read() will return true if there's more data to read
                     while (reader.Read())
                     {
 
@@ -57,7 +57,7 @@ namespace StudentExercises.Data
                         string exerciseLanguageValue = reader.GetString(exerciseLanguageColumnPosition);
 
 
-                        // Create a new exercise object using the data from the database.
+                        /// Create a new exercise object using the data from the database.
                         Exercise exercise = new Exercise
                         {
                             Id = idValue,
@@ -65,15 +65,15 @@ namespace StudentExercises.Data
                             ExerciseLanguage = exerciseLanguageValue,
                         };
 
-                        // Add that exercise object to our list.
+                        /// Add that exercise object to our list.
                         exercises.Add(exercise);
 
                     }
 
-                    // Close() the reader
+                    /// Close() the reader
                     reader.Close();
 
-                    // Return the list of departments who whomever called this method.
+                    /// Return the list of departments who whomever called this method.
                     return exercises;
 
                 }
@@ -81,7 +81,7 @@ namespace StudentExercises.Data
             }
         }
 
-        //  Add a new exercise to the database
+        // Add a new exercise to the database
         public void AddExercise(Exercise exercise)
         {
             using (SqlConnection conn = Connection)
@@ -89,7 +89,14 @@ namespace StudentExercises.Data
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = $"INSERT INTO Exercise (ExerciseName, ExerciseLanguage) Values ('{exercise.ExerciseName}', '{exercise.ExerciseLanguage}')";
+                    ///cmd.CommandText = $"INSERT INTO Exercise (ExerciseName, ExerciseLanguage) Values ('{exercise.ExerciseName}', '{exercise.ExerciseLanguage}')";
+
+                    cmd.CommandText = $@"INSERT INTO Exercise (ExerciseName, ExerciseLanguage) 
+                                        VALUES (@exerciseName, @exerciseLang)";
+                    
+                    cmd.Parameters.Add(new SqlParameter("@exerciseName", exercise.ExerciseName));
+                    cmd.Parameters.Add(new SqlParameter("@exerciseLang", exercise.ExerciseLanguage));
+
                     cmd.ExecuteNonQuery();
                 }
             }
@@ -111,13 +118,13 @@ namespace StudentExercises.Data
                                         FROM Student s INNER JOIN Cohort c
                                         ON s.CohortID = c.id";
 
-                    // Execute the SQL in the database and get a "reader" that will give us access to the data.
+                    /// Execute the SQL in the database and get a "reader" that will give us access to the data.
                     SqlDataReader reader = cmd.ExecuteReader();
 
-                    // A list to hold the departments we retrieve from the database.
+                    /// A list to hold the departments we retrieve from the database.
                     List<Student> students = new List<Student>();
 
-                    // Read() will return true if there's more data to read
+                    /// Read() will return true if there's more data to read
                     while (reader.Read())
                     {
 
@@ -137,7 +144,7 @@ namespace StudentExercises.Data
                         int CohortValue = reader.GetInt32(CohortColumnPosition);
 
 
-                        // Create a new student object using the data from the database.
+                        /// Create a new student object using the data from the database.
                         Student student = new Student
                         {
                             Id = reader.GetInt32(reader.GetOrdinal("Id")),
@@ -184,14 +191,14 @@ namespace StudentExercises.Data
                                         LEFT JOIN Exercise e
                                         ON se.ExerciseId = e.id";
 
-                    // Execute the SQL in the database and get a "reader" that will give us access to the data.
+                    /// Execute the SQL in the database and get a "reader" that will give us access to the data.
                     SqlDataReader reader = cmd.ExecuteReader();
 
                     List<StudentExercise> studentExercises = new List<StudentExercise>();
 
                     while (reader.Read())
                     {
-                        // Create a new StudentExercise object using the data from the database.
+                        /// Create a new StudentExercise object using the data from the database.
                         StudentExercise studentExercise = new StudentExercise
                         {
                             Id = reader.GetInt32(reader.GetOrdinal("Id")),
@@ -232,8 +239,15 @@ namespace StudentExercises.Data
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
+                    ///cmd.CommandText = $@"INSERT INTO StudentExercise (StudentId, ExerciseId) 
+                    ///                    VALUES ({exercise.StudentId}, {exercise.ExerciseId})";
+
                     cmd.CommandText = $@"INSERT INTO StudentExercise (StudentId, ExerciseId) 
-                                        VALUES ({exercise.StudentId}, {exercise.ExerciseId})";
+                                        VALUES (@studentId, @exerciseId)";
+
+                    cmd.Parameters.Add(new SqlParameter("@studentId", exercise.StudentId));
+                    cmd.Parameters.Add(new SqlParameter("@exerciseId", exercise.ExerciseId));
+
                     cmd.ExecuteNonQuery();
                 }
             }
@@ -249,18 +263,13 @@ namespace StudentExercises.Data
         {
             using (SqlConnection conn = Connection)
             {
-                // Open() the connection
                 conn.Open();
-
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-
-                    // Here we setup the command with the SQL we want to execute before we execute it.
                     cmd.CommandText = $@"SELECT i.Id, i.FirstName, i.LastName, i.Slack, i.CohortId, c.CohortName
                                         FROM Instructor i INNER JOIN Cohort c
                                         ON i.CohortId = c.id";
-
-                    // Execute the SQL in the database and get a "reader" that will give us access to the data.
+                    
                     SqlDataReader reader = cmd.ExecuteReader();
                     
                     List<Instructor> instructors = new List<Instructor>();
@@ -282,9 +291,7 @@ namespace StudentExercises.Data
 
                         int CohortColumnPosition = reader.GetOrdinal("CohortId");
                         int CohortValue = reader.GetInt32(CohortColumnPosition);
-
-
-                        // Create a new instructor object using the data from the database.
+                        
                         Instructor instructor = new Instructor
                         {
                             Id = reader.GetInt32(reader.GetOrdinal("Id")),
@@ -310,7 +317,8 @@ namespace StudentExercises.Data
 
             }
         }
-        ///  Add a new Instructor to the database
+
+        //  Add a new Instructor to the database
         public void AddInstructor(Instructor instructor)
         {
             using (SqlConnection conn = Connection)
@@ -318,10 +326,21 @@ namespace StudentExercises.Data
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
+                    ///    cmd.CommandText = $@"INSERT INTO Instructor (FirstName, LastName, Slack, CohortId) 
+                    ///                      VALUES ('{instructor.FirstName}', '{instructor.LastName}', '{instructor.Slack}', {instructor.CohortId})";
+                    ///    cmd.ExecuteNonQuery();
+
                     cmd.CommandText = $@"INSERT INTO Instructor (FirstName, LastName, Slack, CohortId) 
-                                      VALUES ('{instructor.FirstName}', '{instructor.LastName}', '{instructor.Slack}', {instructor.CohortId})";
+                                      VALUES (@firstName, @lastName, @slack, @cohortId)";
+                    
+                    cmd.Parameters.Add(new SqlParameter("@firstName", instructor.FirstName));
+                    cmd.Parameters.Add(new SqlParameter("@lastName", instructor.LastName));
+                    cmd.Parameters.Add(new SqlParameter("@slack", instructor.Slack));
+                    cmd.Parameters.Add(new SqlParameter("@cohortId", instructor.CohortId));
+
                     cmd.ExecuteNonQuery();
                 }
+
             }
         }
     }
